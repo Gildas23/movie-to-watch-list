@@ -5,6 +5,7 @@ import MovieList from "./components/Movies";
 import WatchedSummary from "./components/WatchedMoviesSummary";
 import WatchedMovieList from "./components/WatchedMovies";
 import Main from "./components/Main";
+import { useEffect } from "react";
 
 const tempMovieData = [
   {
@@ -53,11 +54,51 @@ const tempWatchedData = [
   },
 ];
 
+const KEY = "f099808";
 
 export default function App() {
   
+  const [query, setQuery] = useState("fighxxxt");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(
+    function () {
+      async function fetchMovies() {
+          try{
+            setIsLoading(true);
+            setError("");
+  
+            const res = await fetch(
+              `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`,
+            );
+
+            if(!res.ok){
+              throw new Error('Something went wrong when fetching the movies')
+            }
+
+
+            const data = await res.json();
+
+            if(data.Response === 'False'){
+              throw new Error(`No movies could be found for : ${query}`)
+            }
+            setMovies(data.Search)
+            console.log(data.Search)
+
+          }catch(error){
+            setError(error.message)
+          }finally{
+            setIsLoading(false);
+
+          }
+
+      
+      }
+      fetchMovies()
+    },[]);
 
   return (
     <>
@@ -69,7 +110,7 @@ export default function App() {
       <Main>
 
         <ListBox>
-          <MovieList movies={movies} />
+          {isLoading?<Loader/>: error? <ErrorMessage message={error}/> :<MovieList movies={movies} />}
         </ListBox>
 
         <ListBox>
@@ -81,4 +122,13 @@ export default function App() {
 
     </>
   );
+}
+
+
+function Loader (){
+  return <p className="loader">LOADING</p>
+}
+
+function ErrorMessage ({message}){
+  return <p className="error">{message}</p>
 }
