@@ -1,11 +1,12 @@
 import { useState } from "react";
-import Navbar , {Search,NumResults} from "./components/Navbar";
+import Navbar, { Search, NumResults } from "./components/Navbar";
 import ListBox from "./components/ListBox";
 import MovieList from "./components/Movies";
 import WatchedSummary from "./components/WatchedMoviesSummary";
 import WatchedMovieList from "./components/WatchedMovies";
 import Main from "./components/Main";
 import { useEffect } from "react";
+import StarRating from "./components/StarRating";
 
 const tempMovieData = [
   {
@@ -57,88 +58,171 @@ const tempWatchedData = [
 const KEY = "f099808";
 
 export default function App() {
-  
   const [query, setQuery] = useState("extraction");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
 
+  function handleSelectMovie(id) {
+    setSelectedId((currentlySelectedId) =>
+      currentlySelectedId === id ? null : id
+    );
+  }
+
+  function handleCloseMovieDetails() {
+    setSelectedId(null);
+  }
 
   useEffect(
     function () {
       async function fetchMovies() {
-          try{
-            setIsLoading(true);
-            setError("");
-  
-            const res = await fetch(
-              `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`,
-            );
+        try {
+          setIsLoading(true);
+          setError("");
 
-            if(!res.ok){
-              throw new Error('Something went wrong when fetching the movies')
-            }
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          );
 
-
-            const data = await res.json();
-
-            if(data.Response === 'False'){
-              throw new Error(`No movies could be found for : ${query}`)
-            }
-
-
-
-            console.log(data)
-            setMovies(data.Search)
-            console.log(data.Search)
-
-          }catch(error){
-            setError(error.message)
-          }finally{
-            setIsLoading(false);
-
+          if (!res.ok) {
+            throw new Error("Something went wrong when fetching the movies");
           }
+
+          const data = await res.json();
+
+          if (data.Response === "False") {
+            throw new Error(`No movies could be found for : ${query}`);
+          }
+
+          console.log(data);
+          setMovies(data.Search);
+          console.log(data.Search);
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
       }
 
-      if(query.length < 3){
-        setMovies([])
-        setError('')
-        return
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
       }
 
-      fetchMovies()
-    },[query]);
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <Navbar>
-        <Search setQuery={setQuery} query={query}/>
-        <NumResults movies={movies}/>
+        <Search setQuery={setQuery} query={query} />
+        <NumResults movies={movies} />
       </Navbar>
 
       <Main>
-
         <ListBox>
-          {isLoading?<Loader/>: error? <ErrorMessage message={error}/> :<MovieList movies={movies} />}
+          {isLoading ? (
+            <Loader />
+          ) : error ? (
+            <ErrorMessage message={error} />
+          ) : (
+            <MovieList movies={movies} handleSelectMovie={handleSelectMovie} />
+          )}
         </ListBox>
 
         <ListBox>
-          <WatchedSummary watched={watched}/>
-          <WatchedMovieList watched={watched} />
+          {selectedId ? (
+            <MovieDetails
+              selectedId={selectedId}
+              handleCloseMovie={handleCloseMovieDetails}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMovieList watched={watched} />
+            </>
+          )}
         </ListBox>
-
       </Main>
-
     </>
   );
 }
 
-
-function Loader (){
-  return <p className="loader">LOADING</p>
+function Loader() {
+  return <p className="loader">LOADING</p>;
 }
 
-function ErrorMessage ({message}){
-  return <p className="error">{message}</p>
+function ErrorMessage({ message }) {
+  return <p className="error">{message}</p>;
+}
+
+function MovieDetails({ selectedId, handleCloseMovie }) {
+  const [movie, setMovie] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error,setError] = useState()
+
+  useEffect(function () {
+    async function getMovieDetails() {
+      setIsLoading(true)
+      try {
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Something went wrong while fetching");
+        }
+
+        const data = await res.json();
+        setMovie(data);
+      } catch (error) {
+        setError(error.message)
+        console.log(error);
+      }finally{
+        setIsLoading(false)
+      }
+    }
+
+    getMovieDetails();
+  }, [selectedId]);
+
+
+  return (
+    <div className="details" >
+      {
+        isLoading? <Loader/>: error? <ErrorMessage error={error}/> :<>
+        <header>
+        <button className="btn-back" onClick={(e) => handleCloseMovie()}>
+          &larr;
+        </button>
+        <img src={movie.Poster} alt={`Poster of ${movie.movie}`}></img>
+        <div className="details-overview">
+          <h2>{movie.Title}</h2>
+          <p>{movie.Released} &bull; {movie.runtime}</p>
+          <p>{movie.Genre}</p>
+          <p>
+            <span></span>
+            {movie.imdbRating} IMDB rating
+          </p>
+        </div>
+      </header>
+
+      <section>
+      <div className="rating">
+      <StarRating maxRating={10} size={24} />
+      </div>
+        <p><em>{movie.Plot}</em></p>
+        <p>Starring {movie.Actors}</p>
+        <p>Directed by {movie.Director}</p>
+      </section>
+        </>
+      }
+      
+    </div>
+  );
 }

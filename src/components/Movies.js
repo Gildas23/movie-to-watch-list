@@ -1,6 +1,6 @@
-export function MovieListItem({movie}){
+export function MovieListItem({movie,handleSelectMovie}){
     return (
-      <li >
+      <li onClick={e=>handleSelectMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -13,10 +13,10 @@ export function MovieListItem({movie}){
     )
   }
   
-  export default function MovieList({movies}){
+  export default function MovieList({movies,handleSelectMovie}){
   
     return <>
-    <ul className="list">{movies?.map((movie)=><MovieListItem movie={movie} key={movie.imdbID}/>)}
+    <ul className="list list-movies">{movies?.map((movie)=><MovieListItem movie={movie} key={movie.imdbID} handleSelectMovie={handleSelectMovie}/>)}
         </ul>
     </>
           
