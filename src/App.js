@@ -58,11 +58,12 @@ const KEY = "f099808";
 
 export default function App() {
   
-  const [query, setQuery] = useState("fighxxxt");
+  const [query, setQuery] = useState("extraction");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   useEffect(
     function () {
@@ -85,6 +86,10 @@ export default function App() {
             if(data.Response === 'False'){
               throw new Error(`No movies could be found for : ${query}`)
             }
+
+
+
+            console.log(data)
             setMovies(data.Search)
             console.log(data.Search)
 
@@ -94,16 +99,21 @@ export default function App() {
             setIsLoading(false);
 
           }
-
-      
       }
+
+      if(query.length < 3){
+        setMovies([])
+        setError('')
+        return
+      }
+
       fetchMovies()
-    },[]);
+    },[query]);
 
   return (
     <>
       <Navbar>
-        <Search/>
+        <Search setQuery={setQuery} query={query}/>
         <NumResults movies={movies}/>
       </Navbar>
 

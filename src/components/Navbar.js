@@ -1,4 +1,4 @@
-import { useState } from "react";
+// import { useState } from "react";
 export function Logo(){
     return (
       <div className="logo">
@@ -10,8 +10,7 @@ export function Logo(){
     )
   }
   
-  export function Search(){
-    const [query, setQuery] = useState("");
+  export function Search({query,setQuery}){
     return (
       <input
       className="search"
