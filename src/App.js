@@ -105,9 +105,9 @@ export default function App() {
             throw new Error(`No movies could be found for : ${query}`);
           }
 
-          console.log(data);
+          // console.log(data);
           setMovies(data.Search);
-          console.log(data.Search);
+          // console.log(data.Search);
         } catch (error) {
           setError(error.message);
         } finally {
@@ -180,12 +180,10 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
   const isMovieInwatchedList = watched.map((movie)=>movie.imdbID).includes(selectedId)
   const previousUserRating = watched.find((movie=>movie.imdbID))?.userRating
 
-  console.log(isMovieInwatchedList)
 
   function handleAdd(){
 
     const {Title,Year,Poster,imdbRating,Runtime} = movie
-    // console.log(isMovieInwatchedList)
     onAddWatched({userRating,Title,Year,Poster,imdbRating,imdbID:selectedId,runtime:Number(Runtime.split(' ').at(0))})
     onCloseMovie()
   }
@@ -214,6 +212,13 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
 
     getMovieDetails();
   }, [selectedId]);
+
+  useEffect(function(){
+    if(!movie.Title){
+      return ;
+    }
+    document.title = `Movie |${movie.Title}`
+  },[movie])
 
 
   return (
