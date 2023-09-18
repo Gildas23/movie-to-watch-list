@@ -32,35 +32,35 @@ const tempMovieData = [
   },
 ];
 
-const tempWatchedData = [
-  {
-    imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-    runtime: 148,
-    imdbRating: 8.8,
-    userRating: 10,
-  },
-  {
-    imdbID: "tt0088763",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BZmU0M2Y1OGUtZjIxNi00ZjBkLTg1MjgtOWIyNThiZWIwYjRiXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
-    runtime: 116,
-    imdbRating: 8.5,
-    userRating: 9,
-  },
-];
+// const tempWatchedData = [
+//   {
+//     imdbID: "tt1375666",
+//     Title: "Inception",
+//     Year: "2010",
+//     Poster:
+//       "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
+//     runtime: 148,
+//     imdbRating: 8.8,
+//     userRating: 10,
+//   },
+//   {
+//     imdbID: "tt0088763",
+//     Title: "Back to the Future",
+//     Year: "1985",
+//     Poster:
+//       "https://m.media-amazon.com/images/M/MV5BZmU0M2Y1OGUtZjIxNi00ZjBkLTg1MjgtOWIyNThiZWIwYjRiXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
+//     runtime: 116,
+//     imdbRating: 8.5,
+//     userRating: 9,
+//   },
+// ];
 
 const KEY = "f099808";
 
 export default function App() {
-  const [query, setQuery] = useState("extraction");
+  const [query, setQuery] = useState("peaky");
   const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -73,6 +73,15 @@ export default function App() {
 
   function handleCloseMovieDetails() {
     setSelectedId(null);
+  }
+
+  function handleAddMovieToWatched(movie){
+    setWatched(watchedMovies=>[...watchedMovies,movie])
+  }
+
+  function handleRemoveMovie(id){
+    setWatched((watched)=>watched.filter(movie=>movie.imdbID !== id))
+
   }
 
   useEffect(
@@ -139,12 +148,14 @@ export default function App() {
           {selectedId ? (
             <MovieDetails
               selectedId={selectedId}
-              handleCloseMovie={handleCloseMovieDetails}
+              onCloseMovie={handleCloseMovieDetails}
+              onAddWatched={handleAddMovieToWatched}
+              watched={watched}
             />
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedMovieList watched={watched} />
+              <WatchedMovieList watched={watched} onRemoveMovie={handleRemoveMovie}/>
             </>
           )}
         </ListBox>
@@ -161,10 +172,23 @@ function ErrorMessage({ message }) {
   return <p className="error">{message}</p>;
 }
 
-function MovieDetails({ selectedId, handleCloseMovie }) {
+function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error,setError] = useState()
+  const [userRating,setUserRating] = useState(null)
+  const isMovieInwatchedList = watched.map((movie)=>movie.imdbID).includes(selectedId)
+  const previousUserRating = watched.find((movie=>movie.imdbID))?.userRating
+
+  console.log(isMovieInwatchedList)
+
+  function handleAdd(){
+
+    const {Title,Year,Poster,imdbRating,Runtime} = movie
+    // console.log(isMovieInwatchedList)
+    onAddWatched({userRating,Title,Year,Poster,imdbRating,imdbID:selectedId,runtime:Number(Runtime.split(' ').at(0))})
+    onCloseMovie()
+  }
 
   useEffect(function () {
     async function getMovieDetails() {
@@ -197,7 +221,7 @@ function MovieDetails({ selectedId, handleCloseMovie }) {
       {
         isLoading? <Loader/>: error? <ErrorMessage error={error}/> :<>
         <header>
-        <button className="btn-back" onClick={(e) => handleCloseMovie()}>
+        <button className="btn-back" onClick={(e) => onCloseMovie()}>
           &larr;
         </button>
         <img src={movie.Poster} alt={`Poster of ${movie.movie}`}></img>
@@ -214,7 +238,19 @@ function MovieDetails({ selectedId, handleCloseMovie }) {
 
       <section>
       <div className="rating">
-      <StarRating maxRating={10} size={24} />
+      {
+        isMovieInwatchedList?
+        <>
+        <p>You rated this movie {previousUserRating} <span>⭐</span> out of 10</p>
+         
+        </>
+        :<>
+        <StarRating maxRating={10} size={24} onRatingSet={setUserRating} />
+        {userRating > 0 && <button className="btn-add" onClick={handleAdd}>Add to watched list</button>}
+        
+        </>
+      }
+   
       </div>
         <p><em>{movie.Plot}</em></p>
         <p>Starring {movie.Actors}</p>
