@@ -65,6 +65,8 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
+
+
   function handleSelectMovie(id) {
     setSelectedId((currentlySelectedId) =>
       currentlySelectedId === id ? null : id
@@ -86,13 +88,16 @@ export default function App() {
 
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
 
+           
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,{signal:controller.signal}
           );
 
           if (!res.ok) {
@@ -107,9 +112,11 @@ export default function App() {
 
           // console.log(data);
           setMovies(data.Search);
-          // console.log(data.Search);
+          setError("")
         } catch (error) {
+          if(error.name !== "AbortError"){
           setError(error.message);
+        }
         } finally {
           setIsLoading(false);
         }
@@ -122,9 +129,15 @@ export default function App() {
       }
 
       fetchMovies();
+
+      return function(){
+        controller.abort()
+      }
     },
     [query]
   );
+
+ 
 
   return (
     <>
@@ -204,7 +217,7 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
         setMovie(data);
       } catch (error) {
         setError(error.message)
-        console.log(error);
+        // console.log(error);
       }finally{
         setIsLoading(false)
       }
@@ -218,7 +231,25 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
       return ;
     }
     document.title = `Movie |${movie.Title}`
+
+    return function (){
+      document.title = "usePopCorn"
+    }
   },[movie])
+
+  useEffect(function(){
+
+    function closeOnEscKeyPressed(event){
+      if(event.code === "Escape"){
+        onCloseMovie()
+      }
+    }
+
+    document.addEventListener('keydown',closeOnEscKeyPressed)
+    return function(){
+      document.removeEventListener('keydown',closeOnEscKeyPressed)
+    }
+  },[onCloseMovie])
 
 
   return (
