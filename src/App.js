@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Navbar, { Search, NumResults } from "./components/Navbar";
 import ListBox from "./components/ListBox";
 import MovieList from "./components/Movies";
@@ -201,14 +201,17 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error,setError] = useState()
   const [userRating,setUserRating] = useState(null)
+  const countRef = useRef(0)
+
+
   const isMovieInwatchedList = watched.map((movie)=>movie.imdbID).includes(selectedId)
   const previousUserRating = watched.find((movie=>movie.imdbID))?.userRating
 
 
-  function handleAdd(){
+  function handleAddMovieToWatchedList(){
 
     const {Title,Year,Poster,imdbRating,Runtime} = movie
-    onAddWatched({userRating,Title,Year,Poster,imdbRating,imdbID:selectedId,runtime:Number(Runtime.split(' ').at(0))})
+    onAddWatched({userRating,Title,Year,Poster,imdbRating,imdbID:selectedId,runtime:Number(Runtime.split(' ').at(0)),countRatingDecisions:countRef.current  })
     onCloseMovie()
   }
 
@@ -262,6 +265,9 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
     }
   },[onCloseMovie])
 
+  useEffect(function(){
+    if(userRating) countRef.current += 1
+  },[userRating])
 
   return (
     <div className="details" >
@@ -293,7 +299,7 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
         </>
         :<>
         <StarRating maxRating={10} size={24} onRatingSet={setUserRating} />
-        {userRating > 0 && <button className="btn-add" onClick={handleAdd}>Add to watched list</button>}
+        {userRating > 0 && <button className="btn-add" onClick={handleAddMovieToWatchedList}>Add to watched list</button>}
         
         </>
       }
