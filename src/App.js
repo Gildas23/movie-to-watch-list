@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import StarRating from "./components/StarRating";
 import { useMovie } from "./useMovie";
 import { useLocalStorageState } from "./useLocalStorageStorageState";
+import { useKey } from "./useKey";
 
 // const tempMovieData = [
 //   {
@@ -198,20 +199,8 @@ function MovieDetails({ selectedId, onCloseMovie,onAddWatched,watched }) {
       document.title = "usePopCorn"
     }
   },[movie])
-
-  useEffect(function(){
-
-    function closeOnEscKeyPressed(event){
-      if(event.code === "Escape"){
-        onCloseMovie()
-      }
-    }
-
-    document.addEventListener('keydown',closeOnEscKeyPressed)
-    return function(){
-      document.removeEventListener('keydown',closeOnEscKeyPressed)
-    }
-  },[onCloseMovie])
+  
+  useKey('Escape',onCloseMovie)
 
   useEffect(function(){
     if(userRating) countRef.current += 1
