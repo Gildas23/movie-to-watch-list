@@ -1,4 +1,5 @@
 // import { useState } from "react";
+import { useEffect, useRef } from "react"
 export function Logo(){
     return (
       <div className="logo">
@@ -11,6 +12,27 @@ export function Logo(){
   }
   
   export function Search({query,setQuery}){
+    const searchInput = useRef(null)
+
+    useEffect(function(){
+
+      function callback(e){
+        if(document.activeElement === searchInput.current) return ;
+         if(e.code === "Enter"){
+             setQuery("")
+             searchInput.current.focus()
+            }
+        }
+
+      document.addEventListener("keydown",callback)
+
+      // cleanup function  
+      return function(){
+        document.removeEventListener('keydown',callback)
+      }
+
+    },[setQuery])
+
     return (
       <input
       className="search"
@@ -18,6 +40,7 @@ export function Logo(){
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={searchInput}
     />
     )
   }

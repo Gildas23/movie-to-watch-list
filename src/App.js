@@ -148,8 +148,8 @@ export default function App() {
     localStorage.setItem('Watched',JSON.stringify(watched))
   },[watched])
 
- 
 
+ 
   return (
     <>
       <Navbar>
