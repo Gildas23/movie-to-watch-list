@@ -61,7 +61,13 @@ const KEY = "f099808";
 export default function App() {
   const [query, setQuery] = useState("peaky");
   const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState([]);
+
+  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function(){
+    const storedWatchedMovies = JSON.parse(localStorage.getItem('Watched'))
+    return storedWatchedMovies
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -137,6 +143,10 @@ export default function App() {
     },
     [query]
   );
+
+  useEffect(function(){
+    localStorage.setItem('Watched',JSON.stringify(watched))
+  },[watched])
 
  
 
